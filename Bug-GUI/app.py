@@ -54,7 +54,7 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.current_class = None
 
     def visit_FunctionDef(self, node):
-        if self.current_class:  # Bir sınıfın içinde olduğumuzdan emin olun
+        if self.current_class:  
             self.current_methods.append(node.name)
             if node.name.startswith("__"):
                 self.metrics["numberOfPrivateMethods"] += 1
