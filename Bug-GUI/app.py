@@ -162,7 +162,6 @@ def extract_metrics_from_file(file_path):
         print(f"Dosya okuma hatası: {e}")
         return None
 
-    # Kod analizini yapalım
     analyzer = CodeAnalyzer()
 
     try:
@@ -179,14 +178,12 @@ def extract_metrics_from_file(file_path):
 
     metrics_dict = analyzer.get_metrics()
 
-    # FanIn ve FanOut metriklerini normalize et
     metrics_dict["fanIn"] = sum(metrics_dict["fanIn"].values()) if isinstance(metrics_dict["fanIn"], defaultdict) else \
     metrics_dict["fanIn"]
     metrics_dict["fanOut"] = sum(
         len(v) if hasattr(v, "__len__") else 1 for v in metrics_dict["fanOut"].values()) if isinstance(
         metrics_dict["fanOut"], defaultdict) else metrics_dict["fanOut"]
 
-    # Metrikleri DataFrame'e dönüştür
     return pd.DataFrame([metrics_dict])
 
 
