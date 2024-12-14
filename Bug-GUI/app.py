@@ -248,7 +248,7 @@ def predict():
         github_url = request.form['github_url']
         file_path = download_github_file(github_url)
         if not file_path:
-            return render_template('upload.html', error="Geçersiz GitHub linki")
+            return render_template('upload.html', error="Invalid github link")
         input_data = extract_metrics_from_file(file_path)
 
         if isinstance(input_data, str):
