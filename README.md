@@ -4,7 +4,7 @@ Error management and software quality are the top two most important parameters 
 
 ## Website Link
 
-https://bugpredictor.onrender.com/
+https://bugpredictor-1092404460795.europe-west1.run.app/
 
   
 ## Datasets
