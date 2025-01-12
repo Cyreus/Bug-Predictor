@@ -7,12 +7,30 @@ from collections import defaultdict
 import requests
 from urllib.parse import urlparse
 import chardet
-
+import nbformat
+import gc
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = './uploads'
+
+DOWNLOAD_FOLDER = './downloads'
+
+app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+if not os.path.exists(DOWNLOAD_FOLDER):
+    os.makedirs(DOWNLOAD_FOLDER)
+
+ALLOWED_EXTENSIONS = {'py', 'ipynb'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 model = joblib.load('./saved_models/mk1plus.pkl')
 
@@ -42,9 +60,9 @@ class CodeAnalyzer(ast.NodeVisitor):
         }
         self.current_class = None
         self.current_methods = []
-        self.attribute_access = defaultdict(set)  # Attribute usage per method
-        self.inheritance_map = {}  # Class inheritance relationships
-        self.method_calls = defaultdict(set)  # Method call relationships
+        self.attribute_access = defaultdict(set)
+        self.inheritance_map = {}
+        self.method_calls = defaultdict(set)
 
     def visit_ClassDef(self, node):
         self.current_class = node.name
@@ -54,7 +72,7 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.current_class = None
 
     def visit_FunctionDef(self, node):
-        if self.current_class:  
+        if self.current_class:
             self.current_methods.append(node.name)
             if node.name.startswith("__"):
                 self.metrics["numberOfPrivateMethods"] += 1
@@ -62,20 +80,16 @@ class CodeAnalyzer(ast.NodeVisitor):
                 self.metrics["numberOfPublicMethods"] += 1
             self.metrics["numberOfMethods"] += 1
 
-            # Metod içinde çağrıları analiz et
             for stmt in ast.walk(node):
                 if isinstance(stmt, ast.Call) and isinstance(stmt.func, ast.Attribute):
                     self.method_calls[node.name].add(stmt.func.attr)
 
-        # Alt düğümleri ziyaret edin
         self.generic_visit(node)
 
-        # Listenin dolu olduğundan emin olun
         if self.current_methods:
             self.current_methods.pop()
 
     def visit_Assign(self, node):
-        # Check if the assignment defines a class attribute
         if isinstance(node.targets[0], ast.Attribute) and isinstance(node.targets[0].value, ast.Name):
             if self.current_class:
                 attr_name = node.targets[0].attr
@@ -96,13 +110,11 @@ class CodeAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def calculate_metrics(self):
-        # CBO: Coupling Between Objects (number of external classes referenced)
         external_classes = set()
         for calls in self.method_calls.values():
             external_classes.update(calls)
         self.metrics["cbo"] = len(external_classes)
 
-        # DIT: Depth of Inheritance Tree
         self.metrics["dit"] = self._calculate_dit()
 
         # FanIn and FanOut
@@ -111,13 +123,10 @@ class CodeAnalyzer(ast.NodeVisitor):
             for call in calls:
                 self.metrics["fanIn"][call] += 1
 
-        # LCOM: Lack of Cohesion of Methods
         self.metrics["lcom"] = self._calculate_lcom()
 
-        # RFC: Response for Class (methods + unique method calls)
         self.metrics["rfc"] = self.metrics["numberOfMethods"] + sum(len(calls) for calls in self.method_calls.values())
 
-        # WMC: Weighted Methods per Class (simplified as number of methods)
         self.metrics["wmc"] = self.metrics["numberOfMethods"]
 
     def _calculate_dit(self):
@@ -129,7 +138,6 @@ class CodeAnalyzer(ast.NodeVisitor):
         return max((get_depth(cls) for cls in self.inheritance_map), default=0)
 
     def _calculate_lcom(self):
-        # Calculate LCOM based on attribute usage in methods
         total_pairs = len(self.attribute_access) * (len(self.attribute_access) - 1) / 2
         if total_pairs == 0:
             return 0
@@ -149,37 +157,54 @@ class CodeAnalyzer(ast.NodeVisitor):
         return self.metrics
 
 
+def extract_code_from_ipynb(file_path, encoding):
+    try:
+        with open(file_path, 'r', encoding=encoding) as f:
+            nb = nbformat.read(f, as_version=4)
+        code_cells = [cell['source'] for cell in nb.cells if cell['cell_type'] == 'code']
+        return '\n\n'.join(code_cells)
+    except Exception as e:
+        return f"ipynb file reading error: {str(e)}"
+
+
 def extract_metrics_from_file(file_path):
     try:
         rawdata = open(file_path, 'rb').read()
         result = chardet.detect(rawdata)
         encoding = result['encoding']
 
-        with open(file_path, "r", encoding=encoding) as f:
-            code = f.read()
+        extension = file_path.rsplit('.', 1)[1].lower()
+        if extension == 'ipynb':
+            code = extract_code_from_ipynb(file_path, encoding)
+            if isinstance(code, str) and code.startswith("ipynb reading file error!"):
+                return code
+        else:
+            with open(file_path, "r", encoding=encoding) as f:
+                code = f.read()
 
     except (UnicodeDecodeError, Exception) as e:
-        print(f"Dosya okuma hatası: {e}")
+        print(f"file reading error!: {e}")
         return None
 
     analyzer = CodeAnalyzer()
 
     try:
-        analyzer.analyze(code)  # Analyze the code
+        analyzer.analyze(code)
     except IndentationError as e:
-        # If an indentation error is detected
         return f"There is an indentation error in your code. Please check it. Error: {str(e)}"
     except SyntaxError as e:
-        # If a syntax error is detected
         return f"There is a syntax error in your code. Please check it. Error: {str(e)}"
     except Exception as e:
-        # For any other errors
         return f"An unknown error occurred. Please check your code. Error: {str(e)}"
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            gc.collect()
 
     metrics_dict = analyzer.get_metrics()
 
     metrics_dict["fanIn"] = sum(metrics_dict["fanIn"].values()) if isinstance(metrics_dict["fanIn"], defaultdict) else \
-    metrics_dict["fanIn"]
+        metrics_dict["fanIn"]
     metrics_dict["fanOut"] = sum(
         len(v) if hasattr(v, "__len__") else 1 for v in metrics_dict["fanOut"].values()) if isinstance(
         metrics_dict["fanOut"], defaultdict) else metrics_dict["fanOut"]
@@ -188,22 +213,16 @@ def extract_metrics_from_file(file_path):
 
 
 def download_github_file(github_url, download_folder="downloads"):
-    # Ensure the URL is a GitHub URL
     if github_url.startswith("https://github.com"):
-        # Convert to raw content URL
         raw_url = github_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
 
-        # Parse file name from URL
         parsed_url = urlparse(github_url)
         file_name = os.path.basename(parsed_url.path)
 
-        # Create the download folder if it doesn't exist
         os.makedirs(download_folder, exist_ok=True)
 
-        # Full path for the downloaded file
         file_path = os.path.join(download_folder, file_name)
 
-        # Attempt to download the file
         response = requests.get(raw_url)
         if response.status_code == 200:
             with open(file_path, 'wb') as file:
@@ -238,6 +257,10 @@ def upload():
 def predict():
     if 'file' in request.files and request.files['file'].filename != '':
         file = request.files['file']
+
+        if not allowed_file(file.filename):
+            return render_template('upload.html', error="You can upload just python file!")
+
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(file_path)
         input_data = extract_metrics_from_file(file_path)
@@ -248,14 +271,18 @@ def predict():
         github_url = request.form['github_url']
         file_path = download_github_file(github_url)
         if not file_path:
-            return render_template('upload.html', error="Invalid github link")
+            return render_template('upload.html', error="invalid github link!")
         input_data = extract_metrics_from_file(file_path)
 
         if isinstance(input_data, str):
             return render_template('upload.html', error=input_data)
 
     else:
-        return redirect(request.url)
+        return render_template('upload.html', error="Please upload a file or provide a valid GitHub URL!")
+
+    if file_path and os.path.exists(file_path):
+        os.remove(file_path)
+        gc.collect()
 
     scaled_data = scaler.transform(input_data)
     prediction = model.predict(scaled_data)
@@ -277,4 +304,4 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080)

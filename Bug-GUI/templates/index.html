@@ -8,29 +8,25 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+    <link rel="icon" href="{{ url_for('static', filename='assets/images/radio_bug-512.png') }}" type="image/x-icon" />
     <title>Bug Predictor</title>
 
-    <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
 
-    <!-- Additional CSS Files -->
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/fontawesome.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/templatemo-574-mexant.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/owl.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/animate.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css">
-
 
   </head>
 
 <body>
 
 
-  <!-- ***** Header Area Start ***** -->
   <header class="header-area header-sticky">
    <div id="bugPredictorDiv" style="display: flex; align-items: center; padding: 50px; margin: 10px;">
-    <img style="width: 100px; height: 100px;" src="static/assets/images/radio_bug-512.png" alt="">
+    <img id="bugImage" style="width: 100px; height: 100px;" src="static/assets/images/radio_bug-512.png" alt="">
     &nbsp;&nbsp;&nbsp;&nbsp;
     <b id="bugPredictor" style="font-size: 48px; color: #ff511a; padding-top: 29px;">Bug Predictor</b>
    </div>
@@ -40,30 +36,18 @@
           <div class="row">
               <div class="col-12">
                   <nav class="main-nav">
-                      <!-- ***** Logo Start ***** -->
                       <a href="{{ url_for('index') }}" class="logo">
 
                       </a>
-
-
-                      <!-- ***** Logo End ***** -->
-
-                      <!-- ***** Menu Start ***** -->
-                      <ul class="nav">
-
-                      </ul>        
                       <a class='menu-trigger'>
                           <span>Menu</span>
                       </a>
-                      <!-- ***** Menu End ***** -->
                   </nav>
               </div>
           </div>
       </div>
   </header>
-  <!-- ***** Header Area End ***** -->
 
-  <!-- ***** Main Banner Area Start ***** -->
   <div class="swiper-container" id="top">
 
     <div class="swiper-wrapper">
@@ -83,7 +67,7 @@
                   <hr>
                   <h2>Upload your&nbsp;code <br><em>page</em> or <em>link</em> and we will analyze it!</h2>
                   <div class="div-dec"></div>
-                  <p style="font-size:20px;">With the bug predictor, your code is now in safe hands. Upload your code, and let us make bug detections for you!</p>
+                  <p style="font-size:20px;">With the bug predictor, your code is now in safe hands. Upload your code, and let us make bug predicts and measuring quality for you!</p>
                   <div class="buttons">
                     <div class="green-button">
                       <a href="{{url_for('upload')}}">Upload Your Code!</a>
@@ -106,31 +90,7 @@
                 <div class="header-text">
                   <h2><em>Powered</em> with <br> Random <em>Forest</em> Algorithm</h2>
                   <div class="div-dec"></div>
-                  <p style="font-size:20px;">With this, your powerful software is now even stronger. Become unbeatable with our bug prediction model</p>
-                  <div class="buttons">
-                    <div class="green-button">
-                      <a href="{{url_for('upload')}}">Upload Your Code!</a>
-                    </div>
-                    <div class="orange-button">
-                      <a href="{{url_for('contact')}}">Contact Us</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="swiper-slide">
-        <div class="slide-inner" style="background-image:url(assets/images/slide-03.jpg)">
-          <div class="container">
-            <div class="row">
-              <div class="col-lg-8">
-                <div class="header-text">
-
-                  <h2>Reach the<br>Top of the <em>Industry!</em></h2>
-                  <div class="div-dec"></div>
-                  <p style="font-size:20px;">Let your company shine among competing firms. Contact us now and take advantage of our exclusive discounts for businesses!</p>
+                  <p style="font-size:20px;">With this, your powerful software is now even stronger. Become unbeatable with our bug prediction model without extra effort!</p>
                   <div class="buttons">
                     <div class="green-button">
                       <a href="{{url_for('upload')}}">Upload Your Code!</a>
@@ -150,7 +110,6 @@
     <div class="swiper-button-prev swiper-button-white"></div>
   </div>
 
-  <!-- ***** Main Banner Area End ***** -->
 
   <section class="services" id="services">
     <div class="container">
@@ -184,7 +143,7 @@
             <i class="fa-hashtag"></i>
             <h4>Noc:</h4>
             <p><b style="font-size:30px;"><em>{{noc}}</em></b></p>
-            <p>How many solid code lines in source code.</p>
+            <p>How many children of class in source code.(NOC)</p>
             <br>
           </div>
         </div>
@@ -275,16 +234,14 @@
     <div class="container">
       <div class="row">
         <div class="col-lg-12">
-          <p>Copyright © 2024 Bandırma Onyedi Eylül University All Rights Reserved.
+          <p>
           
-          <br>Designed by <a title="CSS Templates" rel="sponsored" href="https://github.com/Cyreus" target="_blank">Cyreus</a></p>
+          Designed by <a rel="sponsored" href="https://github.com/Cyreus" target="_blank">Cyreus</a></p>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- Scripts -->
-  <!-- Bootstrap core JavaScript -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/isotope.min.js') }}"></script>
@@ -336,23 +293,18 @@
 
       var swiper = new Swiper(".swiper-container", swiperOptions);
     </script>
-   <script>
-    const bugPredictorDiv = document.getElementById("bugPredictorDiv");
-    let lastScrollTop = 0;
 
-    window.addEventListener("scroll", function() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  <script>
+      window.addEventListener('scroll', function () {
+    let scrollY = window.scrollY;
+    let opacity = Math.max(0, 1 - scrollY / 300);
 
-        if (scrollTop > 0) {
-            bugPredictorDiv.style.display = 'none';
-        } else {
-            bugPredictorDiv.style.display = 'flex';
-        }
+    document.getElementById('bugImage').style.opacity = opacity;
+    document.getElementById('bugPredictor').style.opacity = opacity;
+});
 
-        lastScrollTop = scrollTop;
-    });
-</script>
 
+  </script>
 
 
 
