@@ -111,7 +111,7 @@ def analyze_with_ai(file_path, code):
         return analysis, ai_suggestions, rating
 
     except Exception as e:
-        print(f"🚨 Hata oluştu: {str(e)}")
+        print(f"error occurred: {str(e)}")
         return None, None
 
 
@@ -168,7 +168,7 @@ def parse_ai_suggestions(suggestion_text):
             suggestions.append({
                 'title': title.strip(),
                 'content': content.strip(),
-                'code': code_blocks if code_blocks else None  # Kod blokları varsa ekle
+                'code': code_blocks if code_blocks else None  
             })
     else:
         paragraphs = [p.strip() for p in suggestion_text.split('\n\n') if p.strip()]
