@@ -163,7 +163,6 @@ def parse_ai_suggestions(suggestion_text):
 
     if matches:
         for _, title, content in matches:
-            # Kod bloklarını tespit et
             code_blocks = code_pattern.findall(content)
             suggestions.append({
                 'title': title.strip(),
